@@ -1,7 +1,7 @@
 from django.db import models
 
 class Loan(models.Model):
-    app_label = 'loans'  # Adicione esta linha
+    app_label = 'loans'
     id = models.AutoField(primary_key=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
@@ -9,7 +9,7 @@ class Loan(models.Model):
     date_requested = models.DateField()
     bank = models.CharField(max_length=100)
     customer = models.CharField(max_length=100)
-
+    balance = models.DecimalField(max_digits=10, decimal_places=2)
     class Meta:
         ordering = ["-date_requested"]
 
