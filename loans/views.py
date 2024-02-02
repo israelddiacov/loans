@@ -24,7 +24,6 @@ class LoanDetailsView(RetrieveUpdateDestroyAPIView):
         DjangoModelPermissionsOrAnonReadOnly,
     ]
 
-# ... outros endpoints ...
 
 class LoanCreateView(CreateAPIView):
     queryset = Loan.objects.all()
