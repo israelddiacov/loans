@@ -3,7 +3,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly
 from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework import status
+from rest_framework import status, routers, serializers, viewsets
+from drf_yasg.views import get_schema_view
+from drf_yasg.utils import swagger_auto_schema
 
 from loans.models import Loan, Payment
 from loans.serializers import LoanSerializer, PaymentSerializer
@@ -12,46 +14,41 @@ from loans.serializers import LoanSerializer, PaymentSerializer
 class LoanViewSet(ListCreateAPIView):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
-    permission_classes = [
-        DjangoModelPermissionsOrAnonReadOnly,
-    ]
+    filter_fields = ['date_requested', 'amount', 'bank']
+    ordering_fields = ['date_requested', 'amount']
+    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
 
 class LoanDetailsView(RetrieveUpdateDestroyAPIView):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
-    permission_classes = [
-        DjangoModelPermissionsOrAnonReadOnly,
-    ]
+    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
 
 
 class LoanCreateView(CreateAPIView):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
 
-    def post(self, request: request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class PaymentCreateView(CreateAPIView):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
 
-    def post(self, request: request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["GET"])
-def get_balance(request: request, loan_id: int):
-    loan = Loan.objects.get(id=loan_id)
-    serializer = LoanSerializer(loan)
-    return Response(serializer.data)
+def get_balance(request, pk):
+    try:
+        loan = Loan.objects.get(id=pk)
+    except Loan.DoesNotExist:
+        return Response({"error": "Loan not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Calculando o saldo
+    payments = loan.payments.all()
+    total_paid = sum(payment.amount for payment in payments)
+
+    balance = loan.amount - total_paid
+
+    return Response({"balance": balance})

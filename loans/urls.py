@@ -15,13 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from django.urls import path
-from loans.views import LoanCreateView, PaymentCreateView
+from django.urls import path, include
+from loans.views import LoanCreateView, PaymentCreateView, LoanViewSet, LoanDetailsView, get_balance
+from rest_framework import routers, serializers, viewsets
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    path("api/loans/", LoanCreateView.as_view()),
-    path("api/loans/payments/", PaymentCreateView.as_view()),
+    path("api/loans/", LoanCreateView.as_view(), name="loan-create"),
+    path("api/loans/payments/", PaymentCreateView.as_view(), name="payment-create"),
+    path("api/loans/<int:pk>/", LoanDetailsView.as_view(), name="loan-detail"),
+    path("api/loans/<int:pk>/balance/", get_balance, name="loan-balance"),
+    path("api/loans/", LoanViewSet.as_view(), name="loan-list"),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
